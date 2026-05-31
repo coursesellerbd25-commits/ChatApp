@@ -17,5 +17,11 @@ app.get("/", (_, res) => {
 });
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
-    socket.on
-})
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
+});
+
+server.listen(5000, () => {
+    console.log("Server running on port 5000");
+});
