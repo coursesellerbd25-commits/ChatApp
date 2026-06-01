@@ -6,6 +6,7 @@ const socket = io("http://localhost:5000");
 function App() {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<string[]>([]);
+    const [room, setRoom] = useState("general");
 
     useEffect(() => {
         socket.on(
@@ -22,11 +23,22 @@ function App() {
         };
     }, []);
 
+    useEffect(() => {
+        socket.emit("join-room", room);
+    }, [room]);
+
+    useEffect(() => {
+        setMessages([]);
+    }, [room]);
+
     const sendMessage = () => {
         if (!message.trim()) return;
         socket.emit(
             "send-message",
-            message 
+            {
+                room, 
+                message,
+            }
         );
         setMessage("");
     };
@@ -36,6 +48,17 @@ function App() {
             <h1 className="text-3xl font-bold mb-6">
                 Mini Discord 
             </h1>
+
+            <select 
+                value={room}
+                onChange={(e) => setRoom(e.target.value)}
+                className="border p-2 mb-4"
+            >
+                <option value="general">#general</option>
+                <option value="mern">#mern</option>
+                <option value="career">#career</option>
+            </select>
+
             <div className="space-y-2 mb-6">
                 {messages.map((msg, index) => (
                     <div 
