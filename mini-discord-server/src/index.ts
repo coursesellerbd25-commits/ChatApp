@@ -2,9 +2,25 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
+
+app.get("/token", (_, res) => {
+    const token = jwt.sign({ 
+        userId: 1,
+        username: "Sultana",
+    },
+    process.env.JWT_SECRET!,
+    {
+        expiresIn: "1h",
+    });
+    res.json({ token });
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
