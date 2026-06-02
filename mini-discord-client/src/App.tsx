@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const socket = io("http://localhost:5000", {
+    auth: {
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDM5NTYzMywiZXhwIjoxNzgwMzk5MjMzfQ.Hp7Z9bxRyfTDuhTW-OkUpgGw8nZ6mFGeznDCGUKgEz8"
+    },
+});
 
 function App() {
     const [message, setMessage] = useState("");

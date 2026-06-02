@@ -1,11 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
-import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-
-dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -52,6 +52,16 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
     });
+});
+
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    try {
+        jwt.verify(token, process.env.JWT_SECRET!);
+        next();
+    } catch {
+        next(new Error("Authentication failed"));
+    }
 });
 
 server.listen(5000, () => {
