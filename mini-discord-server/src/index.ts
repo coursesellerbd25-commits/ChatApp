@@ -31,7 +31,22 @@ const io = new Server(server, {
 app.get("/", (_, res) => {
     res.send("Chat Server Running");
 });
+const onlineUsers = new Set<string>();
+
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    try {
+        jwt.verify(token, process.env.JWT_SECRET!);
+        next();
+    } catch {
+        next(new Error("Authentication failed"));
+    }
+});
+
 io.on("connection", (socket) => {
+    onlineUsers.add(socket.id);
+    console.log("Online:", onlineUsers.size);
+    io.emit("online-users", onlineUsers.size);
     let currentRoom = "general";
     socket.join(currentRoom);
     socket.on("join-room", (newRoom) => {
@@ -50,18 +65,10 @@ io.on("connection", (socket) => {
         console.log(`${socket.id} joined ${room}`);
     });
     socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+        onlineUsers.delete(socket.id);
+        io.emit("online-users", onlineUsers.size);
+        console.log("Online:", onlineUsers.size);
     });
-});
-
-io.use((socket, next) => {
-    const token = socket.handshake.auth.token;
-    try {
-        jwt.verify(token, process.env.JWT_SECRET!);
-        next();
-    } catch {
-        next(new Error("Authentication failed"));
-    }
 });
 
 server.listen(5000, () => {

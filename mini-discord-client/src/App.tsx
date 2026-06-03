@@ -11,6 +11,7 @@ function App() {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<string[]>([]);
     const [room, setRoom] = useState("general");
+    const [onlineUsers, setOnlineUsers] = useState(0);
 
     useEffect(() => {
         socket.on(
@@ -22,6 +23,11 @@ function App() {
                 ]);
             }
         );
+
+        socket.on("online-users", (count: number) => {
+            setOnlineUsers(count);
+        });
+
         return () => {
             socket.off("receive-message");
         };
@@ -52,6 +58,10 @@ function App() {
             <h1 className="text-3xl font-bold mb-6">
                 Mini Discord 
             </h1>
+
+            <p className="mb-4">
+                Online Users: {onlineUsers}
+            </p>
 
             <select 
                 value={room}
