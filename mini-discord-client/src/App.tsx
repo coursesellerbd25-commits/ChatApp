@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const socket = io("http://localhost:5000", {
     auth: {
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDM5NTYzMywiZXhwIjoxNzgwMzk5MjMzfQ.Hp7Z9bxRyfTDuhTW-OkUpgGw8nZ6mFGeznDCGUKgEz8"
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDQ2Njk0NywiZXhwIjoxNzgwNDcwNTQ3fQ.ZXas5KoAzKLm5pRtSDQu1ardlHMH_jX8fdMQsBHVJsA"
     },
 });
 
@@ -30,12 +30,14 @@ function App() {
 
         return () => {
             socket.off("receive-message");
+            socket.off("online-users");
         };
     }, []);
 
     useEffect(() => {
+        if (socket.connected) {
         socket.emit("join-room", room);
-    }, [room]);
+}}, [room]);
 
     useEffect(() => {
         setMessages([]);

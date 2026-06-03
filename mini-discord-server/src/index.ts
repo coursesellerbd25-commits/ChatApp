@@ -44,9 +44,11 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
+    console.log("CONNECTED:", socket.id);
     onlineUsers.add(socket.id);
-    console.log("Online:", onlineUsers.size);
+    console.log("ONLINE COUNT:", onlineUsers.size);
     io.emit("online-users", onlineUsers.size);
+    
     let currentRoom = "general";
     socket.join(currentRoom);
     socket.on("join-room", (newRoom) => {
@@ -59,10 +61,6 @@ io.on("connection", (socket) => {
     socket.on("send-message", ({ room, message }) => {
         console.log("Message:", message);
         io.to(room).emit("receive-message", message);
-    });
-    socket.on("join-room", (room) => {
-        socket.join(room);
-        console.log(`${socket.id} joined ${room}`);
     });
     socket.on("disconnect", () => {
         onlineUsers.delete(socket.id);
