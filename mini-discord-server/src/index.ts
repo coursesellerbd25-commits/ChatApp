@@ -6,6 +6,7 @@ import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
+import { pool } from "./db";
 
 const app = express();
 app.use(cors());
@@ -22,15 +23,32 @@ app.get("/token", (_, res) => {
     res.json({ token });
 });
 
+pool.query("SELECT NOW()").then(() => {
+    console.log("Database Connected");
+}).catch((err) => {
+    console.error(err);
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: "*",
     },
 });
+
 app.get("/", (_, res) => {
     res.send("Chat Server Running");
 });
+
+app.get("/messages/:room", async (req, res) => {
+    const { room } = req.params;
+    const result = await pool.query(
+        `SELECT * FROM messages WHERE room = $1 ORDER BY created_at ASC`, 
+        [room]
+    );
+    res.json(result.rows);
+});
+
 const onlineUsers = new Set<string>();
 
 io.use((socket, next) => {
@@ -47,7 +65,7 @@ io.on("connection", (socket) => {
     socket.on("typing",({ room, username }) => {
         socket.to(room).emit("user-typing", username);
     });
-    
+
     console.log("CONNECTED:", socket.id);
     onlineUsers.add(socket.id);
     console.log("ONLINE COUNT:", onlineUsers.size);
@@ -61,11 +79,16 @@ io.on("connection", (socket) => {
         currentRoom = newRoom;
         console.log(socket.id, "joined", newRoom);
     });
+
     console.log("User connected:", socket.id);
-    socket.on("send-message", ({ room, message }) => {
-        console.log("Message:", message);
+    socket.on("send-message", async ({ room, message }) => {
+        await pool.query(
+            `INSERT INTO messages (room, username, message) VALUES ($1, $2, $3)`,
+            [room, "Sultana", message,]
+        );
         io.to(room).emit("receive-message", message);
     });
+
     socket.on("disconnect", () => {
         onlineUsers.delete(socket.id);
         io.emit("online-users", onlineUsers.size);

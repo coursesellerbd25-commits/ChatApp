@@ -15,6 +15,14 @@ function App() {
     const [typingUser, setTypingUser] = useState("");
 
     useEffect(() => {
+        fetch(`http://localhost:5000/messages/${room}`)
+        .then((res) => res.json())
+        .then((data) => {
+            setMessages(data.map((msg: any) => msg.message));
+        });
+    }, [room]);
+    
+    useEffect(() => {
         socket.on("user-typing", (username: string) => {
             setTypingUser(username);
             setTimeout(() => {
