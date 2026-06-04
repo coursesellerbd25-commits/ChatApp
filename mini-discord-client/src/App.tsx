@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const socket = io("http://localhost:5000", {
     auth: {
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDQ2Njk0NywiZXhwIjoxNzgwNDcwNTQ3fQ.ZXas5KoAzKLm5pRtSDQu1ardlHMH_jX8fdMQsBHVJsA"
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDU0MTM0OSwiZXhwIjoxNzgwNTQ0OTQ5fQ.2Zto3EoaXoJHmWYoLBzIqn91PgcHxND3oe-W0eOtOAw"
     },
 });
 
@@ -12,8 +12,15 @@ function App() {
     const [messages, setMessages] = useState<string[]>([]);
     const [room, setRoom] = useState("general");
     const [onlineUsers, setOnlineUsers] = useState(0);
+    const [typingUser, setTypingUser] = useState("");
 
     useEffect(() => {
+        socket.on("user-typing", (username: string) => {
+            setTypingUser(username);
+            setTimeout(() => {
+                setTypingUser("");
+            }, 1000);
+        });
         socket.on(
             "receive-message",
             (message: string) => {
@@ -31,6 +38,7 @@ function App() {
         return () => {
             socket.off("receive-message");
             socket.off("online-users");
+            socket.off("user-typing");
         };
     }, []);
 
@@ -75,6 +83,12 @@ function App() {
                 <option value="career">#career</option>
             </select>
 
+            {typingUser && (
+                <p className="mb-2">
+                    {typingUser} is typing... 
+                </p>
+            )}
+
             <div className="space-y-2 mb-6">
                 {messages.map((msg, index) => (
                     <div 
@@ -88,9 +102,13 @@ function App() {
             
             <input 
                 value={message}
-                onChange={(e) =>
+                onChange={(e) => {
                     setMessage(e.target.value)
-                }
+                    socket.emit("typing", {
+                        room, 
+                        username: "Sultana",
+                    });
+                }}
                 className="border p-2 mr-2"
                 placeholder="Type message..."
             />

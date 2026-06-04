@@ -44,6 +44,10 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
+    socket.on("typing",({ room, username }) => {
+        socket.to(room).emit("user-typing", username);
+    });
+    
     console.log("CONNECTED:", socket.id);
     onlineUsers.add(socket.id);
     console.log("ONLINE COUNT:", onlineUsers.size);
