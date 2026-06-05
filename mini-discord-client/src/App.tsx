@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const socket = io("http://localhost:5000", {
     auth: {
-        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDU0MTM0OSwiZXhwIjoxNzgwNTQ0OTQ5fQ.2Zto3EoaXoJHmWYoLBzIqn91PgcHxND3oe-W0eOtOAw"
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiU3VsdGFuYSIsImlhdCI6MTc4MDY0NzgwMSwiZXhwIjoxNzgwNjUxNDAxfQ.9p6omkedCfkIaOmo_REnHrcV9OctsoDpmmDbAwt8Wy0"
     },
 });
 
@@ -29,6 +29,7 @@ function App() {
                 setTypingUser("");
             }, 1000);
         });
+
         socket.on(
             "receive-message",
             (message: string) => {
@@ -43,10 +44,15 @@ function App() {
             setOnlineUsers(count);
         });
 
+        socket.on("rate-limit", (msg: string) => {
+            alert(msg);
+        });
+
         return () => {
             socket.off("receive-message");
             socket.off("online-users");
             socket.off("user-typing");
+            socket.off("rate-limit");
         };
     }, []);
 
@@ -116,6 +122,11 @@ function App() {
                         room, 
                         username: "Sultana",
                     });
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        sendMessage();
+                    }
                 }}
                 className="border p-2 mr-2"
                 placeholder="Type message..."

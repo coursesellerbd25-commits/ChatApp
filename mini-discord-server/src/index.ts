@@ -8,6 +8,11 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { pool } from "./db";
 
+const userMessageCounts = new Map<
+    string,
+    { count: number; timestamp: number }
+>();
+
 const app = express();
 app.use(cors());
 
@@ -50,6 +55,8 @@ app.get("/messages/:room", async (req, res) => {
 });
 
 const onlineUsers = new Set<string>();
+const MESSAGE_LIMIT = 5; // Max 5 messages
+const TIME_WINDOW = 10000; // 10 seconds
 
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
@@ -82,6 +89,32 @@ io.on("connection", (socket) => {
 
     console.log("User connected:", socket.id);
     socket.on("send-message", async ({ room, message }) => {
+        console.log("SEND MESSAGE RECEIVED");
+        const now = Date.now();
+        const userData = userMessageCounts.get(socket.id);
+        console.log(userMessageCounts);
+        console.log("Current count:", userData?.count);
+        
+        if (!userData) {
+            userMessageCounts.set(socket.id, {
+                count: 1,
+                timestamp: now,
+            });
+        } else {
+            if (now - userData.timestamp > TIME_WINDOW) {
+                userData.count = 1;
+                userData.timestamp = now;
+            } else {
+                userData.count++;
+            }
+            if (userData.count > MESSAGE_LIMIT) {
+                console.log("Count:", userData.count);
+                console.log("RATE LIMITED:",socket.id);
+                socket.emit("rate-limit", "Too many messages. Slow down.");
+                return;
+            }
+        }
+
         await pool.query(
             `INSERT INTO messages (room, username, message) VALUES ($1, $2, $3)`,
             [room, "Sultana", message,]
