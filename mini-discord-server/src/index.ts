@@ -116,7 +116,7 @@ io.on("connection", (socket) => {
         }
 
         await pool.query(
-            `INSERT INTO messages (room, username, message) VALUES ($1, $2, $3)`,
+            "INSERT INTO messages (room, username, message) VALUES ($1, $2, $3)",
             [room, "Sultana", message,]
         );
         io.to(room).emit("receive-message", message);
@@ -132,5 +132,5 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-    console.log("Server running on port ${PORT");
+    console.log(`Server running on port ${PORT}`);
 });
